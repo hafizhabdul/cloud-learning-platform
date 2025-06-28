@@ -3,6 +3,7 @@ import { AppProvider } from '../contexts/AppContext';
 import { useAuth } from '../hooks/useAuth';
 import { Layout } from '../components/Layout';
 import { AuthPage } from '../components/Auth/AuthPage';
+import { GoogleAuthSuccess, GoogleAuthFailure } from '../components/Auth/GoogleAuthCallback';
 import Dashboard from '../components/Dashboard/Dashboard';
 import LearningPaths from '../components/LearningPaths/LearningPaths';
 import Progress from '../components/Progress/Progress';
@@ -75,6 +76,14 @@ export default function Router() {
         <Route 
           path="/auth" 
           element={user ? <Navigate to="/" replace /> : <AuthPage />} 
+        />
+        <Route 
+          path="/auth/success" 
+          element={<GoogleAuthSuccess />} 
+        />
+        <Route 
+          path="/auth/failure" 
+          element={<GoogleAuthFailure />} 
         />
         <Route 
           path="/*" 

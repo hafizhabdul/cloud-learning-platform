@@ -1,5 +1,6 @@
 const express = require('express');
 const authRoutes = require('./auth');
+const dashboardRoutes = require('./dashboard');
 
 const router = express.Router();
 
@@ -14,5 +15,8 @@ router.get('/health', (req, res) => {
 
 // Authentication routes
 router.use('/auth', authRoutes);
+
+// Dashboard routes
+router.use('/dashboard', dashboardRoutes);
 
 module.exports = router;

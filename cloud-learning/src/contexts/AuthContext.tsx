@@ -1,13 +1,14 @@
 import React, { createContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { apiClient } from '../services/api';
-import type { User, LoginRequest, RegisterRequest } from '../services/api';
+import { authApi } from '../services/apiClient';
+import type { User, LoginRequest, RegisterRequest } from '../services/apiClient';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
   register: (userData: RegisterRequest) => Promise<void>;
+  loginWithGoogle: () => void;
   logout: () => void;
   isAuthenticated: boolean;
   updateUserProfile: (data: Partial<User>) => Promise<void>;
@@ -28,13 +29,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Check if user is already logged in
     const initializeAuth = async () => {
-      if (apiClient.isAuthenticated()) {
+      // Check for Google OAuth token in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      
+      if (token) {
+        localStorage.setItem('auth_token', token);
+        // Clear the token from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      if (authApi.isAuthenticated()) {
         try {
-          const response = await apiClient.getProfile();
+          const response = await authApi.getProfile();
           setUser(response.user);
         } catch (error) {
           console.error('Failed to get user profile:', error);
-          apiClient.clearToken();
+          authApi.logout();
         }
       }
       setLoading(false);
@@ -46,7 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (credentials: LoginRequest) => {
     setLoading(true);
     try {
-      const response = await apiClient.login(credentials);
+      const response = await authApi.login(credentials);
       setUser(response.user);
     } finally {
       setLoading(false);
@@ -56,22 +67,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (userData: RegisterRequest) => {
     setLoading(true);
     try {
-      const response = await apiClient.register(userData);
+      const response = await authApi.register(userData);
       setUser(response.user);
     } finally {
       setLoading(false);
     }
   };
 
+  const loginWithGoogle = () => {
+    authApi.initiateGoogleLogin();
+  };
+
   const logout = () => {
-    apiClient.clearToken();
+    authApi.logout();
     setUser(null);
   };
 
-  const updateUserProfile = async (data: Partial<User>) => {
-    await apiClient.updateProfile(data);
+  const updateUserProfile = async (_data: Partial<User>) => {
+    // Note: This endpoint doesn't exist yet in the new API
+    // await authApi.updateProfile(data);
     // Refresh user profile
-    const response = await apiClient.getProfile();
+    const response = await authApi.getProfile();
     setUser(response.user);
   };
 
@@ -80,6 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     login,
     register,
+    loginWithGoogle,
     logout,
     isAuthenticated: !!user,
     updateUserProfile,

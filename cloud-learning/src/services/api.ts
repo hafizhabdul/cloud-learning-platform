@@ -1,10 +1,11 @@
 // API Configuration and Client
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = 'http://localhost:3000/api';
 
 interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   message?: string;
+  success?: boolean;
 }
 
 interface User {
@@ -116,21 +117,22 @@ class ApiClient {
   }
 
   async getProfile(): Promise<{ user: User }> {
-    return this.request<{ user: User }>('/profile');
+    return this.request<{ user: User }>('/auth/profile');
   }
 
   async updateProfile(data: Partial<User>): Promise<ApiResponse> {
-    return this.request<ApiResponse>('/profile', {
+    return this.request<ApiResponse>('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
     });
   }
 
-  // Progress methods
-  async getUserProgress(): Promise<ApiResponse> {
-    return this.request<ApiResponse>('/progress');
+  // Google OAuth login
+  initiateGoogleLogin(): void {
+    window.location.href = `${API_BASE_URL}/auth/google`;
   }
 
+  // Progress methods
   async updateCourseProgress(data: ProgressData): Promise<ApiResponse> {
     return this.request<ApiResponse>('/progress/course', {
       method: 'POST',
@@ -160,10 +162,6 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify(data),
     });
-  }
-
-  async getDashboardStats(): Promise<ApiResponse> {
-    return this.request<ApiResponse>('/dashboard/stats');
   }
 
   // Community methods
@@ -210,6 +208,15 @@ class ApiClient {
     return this.request<ApiResponse>(`/discussions/${id}/like`, {
       method: 'POST',
     });
+  }
+
+  // Dashboard methods
+  async getDashboardStats(): Promise<ApiResponse> {
+    return this.request<ApiResponse>('/dashboard/stats');
+  }
+
+  async getUserProgress(): Promise<ApiResponse> {
+    return this.request<ApiResponse>('/dashboard/progress');
   }
 
   // Utility methods
